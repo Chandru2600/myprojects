@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TO-DO LIST</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%); /* Orange gradient */
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0;
+    }
+    .container {
+      max-width: 400px;
+      width: 100%;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.9);
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #4a4a4a;
+      font-size: 28px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .button {
+      background-color: #ff6f20; /* Orange button */
+      color: #fff;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    .button:hover {
+      background-color: #e65c00; /* Darker orange on hover */
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(255, 111, 32, 0.4);
+    }
+    .input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      border: 2px solid #ddd;
+      border-radius: 25px;
+      font-size: 16px;
+      transition: border-color 0.3s ease;
+    }
+    .input:focus {
+      outline: none;
+      border-color: #ff6f20; /* Orange focus border */
+    }
+    .reminder {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background-color 0.3s ease;
+    }
+    .reminder:hover {
+      background-color: #f7f7f7;
+    }
+    .delete {
+      background-color: #ff4d4d; /* Red delete button */
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .delete:hover {
+      background-color: #d63031; /* Darker red on hover */
+    }
+    .complete {
+      background-color: #4caf50; /* Green complete button */
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .complete:hover {
+      background-color: #45a049; /* Darker green on hover */
+    }
+    .hide {
+      display: none;
+    }
+    .category-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .category {
+      background-color: #ffb74d; /* Light orange for category buttons */
+      flex: 1; /* Make buttons take equal space */
+      margin: 0 5px; /* Add some space between buttons */
+    }
+    .category:hover {
+      background-color: #ffa726; /* Darker orange on hover */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="header ">TO-DO-LIST APP</h1>
+    <input type="text" id="reminder-text" class="input" placeholder="Enter Task  ">
+    <select id="priority" class="input">
+      <option value="low">Low Priority</option>
+      <option value="medium">Medium Priority</option>
+      <option value="high">High Priority</option>
+    </select>
+    
+    <button class="button" id="start-listening">Voice Assistant</button>
+    <button class="button hide" id="stop-listening">Stop Listening</button>
+    <button class="button" id="add-reminder">Add Task </button>
+    
+    <div class="category-buttons">
+      <button class="button category" id="show-all">All</button>
+      <button class="button category" id="show-pending">Pending</button>
+      <button class="button category" id="show-completed">Completed</button>
+    </div>
+    <ul id="reminders" class="reminders"></ul>
+  </div>
+
+  <script>
+    const recognition = new webkitSpeechRecognition();
+    let reminders = [];
+
+    recognition.lang = 'en-US';
+    recognition.maxResults = 10;
+
+    recognition.onresult = event => document.getElementById('reminder-text').value = event.results[0][0].transcript;
+
+    recognition.onstart = () => {
+      document.getElementById('start-listening').classList.add('hide');
+      document.getElementById('stop-listening').classList.remove('hide');
+    };
+
+    recognition.onend = () => {
+      document.getElementById('start-listening').classList.remove('hide');
+      document.getElementById('stop-listening').classList.add('hide');
+    };
+
+    document.getElementById('start-listening').addEventListener('click', () => {
+      recognition.start();
+    });
+
+    document.getElementById('stop-listening').addEventListener('click', () => {
+      recognition.stop();
+    });
+
+    document.getElementById('add-reminder').addEventListener('click', () => {
+      const reminderText = document.getElementById('reminder-text').value.trim();
+      const priority = document.getElementById('priority').value;
+      if (reminderText) {
+        const reminder = { text: reminderText, priority, status: 'pending' }; // Add status
+        reminders.push(reminder);
+        displayReminders(reminders);
+        document.getElementById('reminder-text').value = '';
+      }
+    });
+
+    function displayReminders(remindersToDisplay) {
+      const remindersList = document.getElementById('reminders');
+      remindersList.innerHTML = ''; // Clear the list
+      remindersToDisplay.forEach(reminder => {
+        const reminderElement = document.createElement('li');
+        reminderElement.classList.add('reminder');
+        reminderElement.innerHTML = `
+          <span>${reminder.text}</span>
+          <span style="font-size: 12px; margin-left:0px; color: #888;">(${reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)} Priority)</span>
+          <button class="complete ">Completed</button>
+          <button class="delete">Delete</button>
+        `;
+        remindersList.appendChild(reminderElement);
+      });
+    }
+
+    document.getElementById('reminders').addEventListener('click', event => {
+      if (event.target.classList.contains('delete')) {
+        const reminderElement = event.target.parentNode;
+        reminders = reminders.filter(reminder => reminder.text !== reminderElement.querySelector('span').textContent);
+        displayReminders(reminders);
+      } else if (event.target.classList.contains('complete')) {
+        const reminderElement = event.target.parentNode;
+        const reminderText = reminderElement.querySelector('span').textContent;
+        const reminder = reminders.find(rem => rem.text === reminderText);
+        reminder.status = 'completed'; // Update status
+        displayReminders(reminders);
+      }
+    });
+
+    document.getElementById('show-all').addEventListener('click', () => displayReminders(reminders));
+    document.getElementById('show-pending').addEventListener('click', () => displayReminders(reminders.filter(rem => rem.status === 'pending')));
+    document.getElementById('show-completed').addEventListener('click', () => displayReminders(reminders.filter(rem => rem.status === 'completed')));
+  </script>
+</body>
+</html>
